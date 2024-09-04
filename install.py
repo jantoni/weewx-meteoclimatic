@@ -1,24 +1,25 @@
-# installer for windy
-# Copyright 2019-2020 Matthew Wall
+# installer for Meteoclimatic
+# José A. García-Tenorio
+# Basado en el código de Matthew Wall
+# 
 # Distributed under the terms of the GNU Public License (GPLv3)
 
 from weecfg.extension import ExtensionInstaller
 
 def loader():
-    return WindyInstaller()
+    return MeteoclimaticInstaller()
 
-class WindyInstaller(ExtensionInstaller):
+class MeteoclimaticInstaller(ExtensionInstaller):
     def __init__(self):
-        super(WindyInstaller, self).__init__(
+        super(MeteoclimaticInstaller, self).__init__(
             version="0.7",
-            name='windy',
-            description='Upload weather data to Windy.',
-            author="Matthew Wall",
-            author_email="mwall@users.sourceforge.net",
-            restful_services='user.windy.Windy',
+            name='meteoclimatic',
+            description='Upload weather data to Meteoclimatic.',
+            author="José A. García-Tenorio",
+            restful_services='user.meteoclimatic.Meteoclimatic',
             config={
                 'StdRESTful': {
-                    'Windy': {
+                    'Meteoclimatic': {
                         'api_key': 'replace_me'}}},
-            files=[('bin/user', ['bin/user/windy.py'])]
+            files=[('bin/user', ['bin/user/meteoclimatic.py'])]
             )
