@@ -68,7 +68,7 @@ except ImportError:
     import syslog
 
     def logmsg(level, msg):
-        syslog.syslog(level, 'windy: %s' % msg)
+        syslog.syslog(level, 'meteoclimatic: %s' % msg)
 
     def logdbg(msg):
         logmsg(syslog.LOG_DEBUG, msg)
