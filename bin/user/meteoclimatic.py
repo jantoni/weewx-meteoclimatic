@@ -1,27 +1,14 @@
-# Copyright 2019-2020 Matthew Wall
+# Creado por José A. García Tenorio
+# Basado en el código original para Windy de Matthew Wall
 
 """
-This is a weewx extension that uploads data to a windy.com
-
-http://windy.com
-
-The protocol is desribed at the windy community forum:
-
-https://community.windy.com/topic/8168/report-you-weather-station-data-to-windy
+This is a weewx extension that uploads data to a Meteoclimatic
 
 Minimal configuration
 
 [StdRESTful]
     [[Windy]]
         api_key = API_KEY
-
-If you have multiple stations, distinguish them using a station identifier.
-For example:
-
-[StdRESTful]
-    [[Windy]]
-        api_key = API_KEY
-        station = 1
 
 The default station identifier is 0.
 """
@@ -93,13 +80,13 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
 
 
-class Windy(weewx.restx.StdRESTbase):
-    DEFAULT_URL = 'https://stations.windy.com/pws/update'
+class Meteoclimatic(weewx.restx.StdRESTbase):
+    DEFAULT_URL = 'https://api.meteoclimatic.com/v2/api.json/station/weather'
 
     def __init__(self, engine, cfg_dict):
-        super(Windy, self).__init__(engine, cfg_dict)
+        super(Meteoclimatic, self).__init__(engine, cfg_dict)
         loginf("version is %s" % VERSION)
-        site_dict = weewx.restx.get_site_dict(cfg_dict, 'Windy', 'api_key')
+        site_dict = weewx.restx.get_site_dict(cfg_dict, 'Meteoclimatic', 'api_key')
         if site_dict is None:
             return
 
@@ -109,7 +96,7 @@ class Windy(weewx.restx.StdRESTbase):
             pass
 
         self.archive_queue = queue.Queue()
-        self.archive_thread = WindyThread(self.archive_queue, **site_dict)
+        self.archive_thread = MeteoclimaticThread(self.archive_queue, **site_dict)
 
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
@@ -118,15 +105,15 @@ class Windy(weewx.restx.StdRESTbase):
         self.archive_queue.put(event.record)
 
 
-class WindyThread(weewx.restx.RESTThread):
+class MeteoclimaticThread(weewx.restx.RESTThread):
 
-    def __init__(self, q, api_key, station=0, server_url=Windy.DEFAULT_URL,
+    def __init__(self, q, api_key, server_url=Meteoclimatic.DEFAULT_URL,
                  skip_upload=False, manager_dict=None,
                  post_interval=None, max_backlog=sys.maxsize, stale=None,
                  log_success=True, log_failure=True,
                  timeout=60, max_tries=3, retry_wait=5):
-        super(WindyThread, self).__init__(q,
-                                          protocol_name='Windy',
+        super(MeteoclimaticThread, self).__init__(q,
+                                          protocol_name='Meteoclimatic',
                                           manager_dict=manager_dict,
                                           post_interval=post_interval,
                                           max_backlog=max_backlog,
@@ -143,14 +130,14 @@ class WindyThread(weewx.restx.RESTThread):
         self.skip_upload = to_bool(skip_upload)
 
     def format_url(self, _):
-        """Return an URL for doing a POST to windy"""
+        """Return an URL for doing a POST to meteoclimatic"""
         url = '%s/%s' % (self.server_url, self.api_key)
         if weewx.debug >= 2:
             logdbg("url: %s" % url)
         return url
 
     def get_post_body(self, record):
-        """Specialized version for doing a POST to windy"""
+        """Specialized version for doing a POST to meteoclimatic"""
         record_m = weewx.units.to_METRICWX(record)
         data = {
             'station': self.station,  # integer identifier, usually "0"
@@ -189,21 +176,21 @@ class WindyThread(weewx.restx.RESTThread):
 
 
 # Use this hook to test the uploader:
-#   PYTHONPATH=bin python bin/user/windy.py
+#   PYTHONPATH=bin python bin/user/meteoclimatic.py
 
 if __name__ == "__main__":
     weewx.debug = 2
 
     try:
         # WeeWX V4 logging
-        weeutil.logger.setup('windy', {})
+        weeutil.logger.setup('meteoclimatic', {})
     except NameError:
         # WeeWX V3 logging
-        syslog.openlog('windy', syslog.LOG_PID | syslog.LOG_CONS)
+        syslog.openlog('meteoclimatic', syslog.LOG_PID | syslog.LOG_CONS)
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
     q = queue.Queue()
-    t = WindyThread(q, api_key='123', station=0)
+    t = MeteoclimaticThread(q, api_key='123', station=0)
     t.start()
     r = {'dateTime': int(time.time() + 0.5),
          'usUnits': weewx.US,
