@@ -7,7 +7,7 @@ This is a weewx extension that uploads data to a Meteoclimatic
 Minimal configuration
 
 [StdRESTful]
-    [[Windy]]
+    [[Meteoclimatic]]
         api_key = API_KEY
 
 The default station identifier is 0.
